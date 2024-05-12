@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 webcam = False
-path = 'D:\\heightMeasurement\\test2\\f1222fabfee360b54be2a84e7fb7d07b.jpg'
+path = 'D:\\heightMeasurement\\test2\\border\\f1222fabfee360b54be2a84e7fb7d07b.jpg'
 cap = cv2.VideoCapture(0)
 cap.set(10,160)
 cap.set(3,1920)
