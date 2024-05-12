@@ -1,5 +1,6 @@
 import streamlit as st
 import cv2
+import math
 from cv2 import imshow
 import mediapipe as mp
 from PIL import Image
@@ -37,11 +38,16 @@ def posecheck():
         )
         print("1")
 
-    if face_results.detections:
-        for detection in face_results.detections:
-            mp_drawing.draw_detection(annotated_image, detection)
+    # if face_results.detections:
+    #     for detection in face_results.detections:
+    #         mp_drawing.draw_detection(annotated_image, detection)
 
     annotated_image = Image.fromarray(annotated_image,'RGB')
+    imgwidth, imgheight, _ = img.shape
+    Lshoulderpos=[pose_results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y*imgheight,pose_results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x*imgheight]
+    Lhippos=[pose_results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].y*imgheight,pose_results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].x*imgheight]
+    finddis = math.dist(Lshoulderpos,Lhippos)
+    print(finddis)
     annotated_image.show()
 
 
