@@ -2,7 +2,10 @@ import cv2
 import math
 import mediapipe as mp
 from PIL import Image
+import time
 import numpy as np
+
+start=time.time()
 
 # Mediapipe setup for both pose and face detection
 mp_drawing = mp.solutions.drawing_utils
@@ -18,12 +21,21 @@ def posecheck():
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5) as pose:
-            pose_results = pose.process(img)
+    hog = cv2.HOGDescriptor()
+    hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-        # Initialize face detection
-    with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detector:
-        face_results = face_detector.process(img)
+    (human,_) = hog.detectMultiScale(img,padding=(0,0),winStride=(2,2),scale=1.1)
+
+    print(human)
+
+    for (x,y,w,h) in human:
+         print(x,y,w,h)
+         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    # cv2.circle(img,(human[0][0],human[1][3]),radius=10,color=(0,0,255),thickness=-1)
+
+    with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5) as pose:
+            pose_results = pose.process(img)    
 
     # Draw pose and face landmarks on the image
     annotated_image = img.copy()
@@ -66,4 +78,6 @@ def distanceget(pos1, pos2):
     return math.dist(pos1,pos2)
 
 posecheck()
+end=time.time()
+print(end-start)
 # ยังไม่ได้เช็คตำแหน่งบนสุดของหัว
