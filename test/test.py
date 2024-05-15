@@ -4,7 +4,7 @@ import time
   
 img = cv2.imread("D:\\heightMeasurement\\test\\test_img\\275968.jpg")
 img = cv2.resize(img,(800,800))
-pos = []
+pos,heightinpixel,refinpixel = [],[],[]
   
 def draw_circle(event, x, y, flags, param): 
       
@@ -23,8 +23,6 @@ cv2.setMouseCallback("Original Picture", draw_circle)
 
 while True: 
     cv2.imshow("Original Picture", img) 
-    pos,heightinpixel = [],[]
-    refinpixel=[]
     k = cv2.waitKey(0)
 
     if cv2.waitKey(0) == ord('a'):
