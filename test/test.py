@@ -1,6 +1,5 @@
 import cv2 
 import math
-import time  
   
 img = cv2.imread("D:\\heightMeasurement\\test\\test_img\\275968.jpg")
 img = cv2.resize(img,(800,800))
