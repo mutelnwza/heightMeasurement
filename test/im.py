@@ -15,22 +15,12 @@ mp_face_detection = mp.solutions.face_detection
 def posecheck():
     imgname = "depositphotos_194974120-stock-photo-casual-man-full-body-in.jpg"
     imgsit="woman-doing-sit-to-stand-exercise.png"
-    path = "D:\\heightMeasurement\\test\\test_img\\"+imgsit
+    half = "half.jpg"
+    path = "D:\\heightMeasurement\\test\\test_img\\"+imgname
     img = Image.open(r""+path)
     img = np.array(img)
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    hog = cv2.HOGDescriptor()
-    hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-
-    (human,_) = hog.detectMultiScale(img,padding=(0,0),winStride=(2,2),scale=1.1)
-
-    print(human)
-
-    for (x,y,w,h) in human:
-         print(x,y,w,h)
-         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     # cv2.circle(img,(human[0][0],human[1][3]),radius=10,color=(0,0,255),thickness=-1)
 
@@ -55,29 +45,79 @@ def posecheck():
     imgwidth, imgheight, _ = img.shape
     poselandmark = pose_results.pose_landmarks.landmark
 
-    postoget= [poselandmark[mp_pose.PoseLandmark.LEFT_SHOULDER], poselandmark[mp_pose.PoseLandmark.LEFT_HIP],poselandmark[mp_pose.PoseLandmark.LEFT_KNEE],poselandmark[mp_pose.PoseLandmark.LEFT_ANKLE],poselandmark[mp_pose.PoseLandmark.LEFT_HEEL],poselandmark[mp_pose.PoseLandmark.RIGHT_SHOULDER], poselandmark[mp_pose.PoseLandmark.RIGHT_HIP],poselandmark[mp_pose.PoseLandmark.RIGHT_KNEE],poselandmark[mp_pose.PoseLandmark.RIGHT_ANKLE],poselandmark[mp_pose.PoseLandmark.RIGHT_HEEL]]
 
-    # convert normalized position to pixel then draw circle on the poselandmark
-    for i in range(len(postoget)):
-         if postoget[i].x and postoget[i].y <= 1:
-            pos=pixel(postoget[i].x,postoget[i].y,imgwidth,imgheight)
-            rawimg = cv2.circle(rawimg,(round(pos[1]),round(pos[0])),radius=10,color=(0,0,255),thickness=-1)
+# find distance between shoulder and hip
 
+    if poselandmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x and poselandmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y and poselandmark[mp_pose.PoseLandmark.LEFT_HIP].x and poselandmark[mp_pose.PoseLandmark.LEFT_HIP].y <= 1:
+        pos1=pixel([poselandmark[mp_pose.PoseLandmark.LEFT_SHOULDER]],imgwidth,imgheight)
+        pos2=pixel([poselandmark[mp_pose.PoseLandmark.LEFT_HIP]],imgwidth,imgheight)
+        dist = abs(pos1[1]-pos2[1])
+        print(dist)
 
-    print(img.shape)
+    elif poselandmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x and poselandmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y and poselandmark[mp_pose.PoseLandmark.RIGHT_HIP].x and poselandmark[mp_pose.PoseLandmark.RIGHT_HIP].y <= 1:
+        pos1=pixel([poselandmark[mp_pose.PoseLandmark.RIGHT_SHOULDER]],imgwidth,imgheight)
+        pos2=pixel([poselandmark[mp_pose.PoseLandmark.RIGHT_HIP]],imgwidth,imgheight)
+        dist = abs(pos1[1]-pos2[1])
+
+    else:
+         print("shoulder and hip not found")
+         quit()
+
+    posleft=[
+            poselandmark[mp_pose.PoseLandmark.LEFT_HIP],
+            poselandmark[mp_pose.PoseLandmark.LEFT_KNEE],
+            poselandmark[mp_pose.PoseLandmark.LEFT_ANKLE],
+            poselandmark[mp_pose.PoseLandmark.LEFT_HEEL]
+            ]
+
+    posright=[
+            poselandmark[mp_pose.PoseLandmark.RIGHT_HIP],
+            poselandmark[mp_pose.PoseLandmark.RIGHT_KNEE],
+            poselandmark[mp_pose.PoseLandmark.RIGHT_ANKLE],
+            poselandmark[mp_pose.PoseLandmark.RIGHT_HEEL]
+            ]
+
+    availableleft,availableright,pixelleft,pixelright=[],[],[],[]
+
+    checkpos(posleft,availableleft)
+    checkpos(posright,availableright)
+
+    cvt(availableleft,pixelleft,imgwidth,imgheight,rawimg)
+    cvt(availableright,pixelright,imgwidth,imgheight,rawimg)
+
+    print(pixelleft)
+    print(pixelright)
+
+    print("shape",img.shape)
     # img size
 
     drawposshow = Image.fromarray(rawimg, "RGB")
     drawposshow.show()
 
-def pixel(x,y,wid,hi):
-     return y*wid, x*hi
+
+def pixel(pos,wid,hi,):
+    for i in range(len(pos)):
+        return pos[i].x*hi,pos[i].y*wid
+
+
+def cvt(pos,listtoadd,wid,hi,img):
+    for i in range(len(pos)):
+        position=pos[i].x*hi,pos[i].y*wid
+        print("pos",position)
+        listtoadd.append(position)
+        cv2.circle(img,(round(position[0]),round(position[1])),radius=0,color=(0,0,255),thickness=20)
 
 
 def distanceget(pos1, pos2):
     return math.dist(pos1,pos2)
 
-posecheck()
+
+def checkpos(listofpos,listtoadd):
+    for i in range(len(listofpos)):
+        if listofpos[i].x and listofpos[i].y <= 1:
+                listtoadd.append(listofpos[i])
+
+print(posecheck())
 end=time.time()
 print(end-start)
 # ยังไม่ได้เช็คตำแหน่งบนสุดของหัว
