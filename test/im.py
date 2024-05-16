@@ -16,7 +16,8 @@ def posecheck():
     imgname = "depositphotos_194974120-stock-photo-casual-man-full-body-in.jpg"
     imgsit="woman-doing-sit-to-stand-exercise.png"
     half = "half.jpg"
-    path = "D:\\heightMeasurement\\test\\test_img\\"+imgname
+    a = "276025.jpg"
+    path = "D:\\heightMeasurement\\test\\test_img\\"+a
     img = Image.open(r""+path)
     img = np.array(img)
 

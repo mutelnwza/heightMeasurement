@@ -1,7 +1,7 @@
 import cv2 
 import math
   
-img = cv2.imread("D:\\heightMeasurement\\test\\test_img\\275968.jpg")
+img = cv2.imread("D:\\heightMeasurement\\test\\test_img\\276025.jpg")
 img = cv2.resize(img,(800,800))
 pos,heightinpixel,refinpixel = [],[],[]
 heightsum = 0
@@ -63,7 +63,7 @@ while True:
         cv2.imshow("final height",img)
         
         
-   
+
 cv2.destroyAllWindows() 
 
 # วาดจุดลงบนตำแหน่งที่จะวัด get position แล้วหาระยะห่าง
