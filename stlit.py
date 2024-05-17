@@ -35,11 +35,14 @@ def stage2():
         st.session_state['heightsum'] += st.session_state['heightinpixel'][i]
 
 def stage3():
-    if st.session_state['refincm'] != 0:
+    if st.session_state['refincm'] != 0 and st.session_state['refpos'] != []:
+        st.session_state['refincm'] = float(st.session_state['refincm'])
         st.session_state.stage =3
         st.session_state['img'] = img
-    else:
-        pass
+    elif st.session_state['refincm'] == 0:
+        st.text("please input height of the reference object")
+    elif st.session_state['refpos'] == []:
+        st.text("please mark the positions of the reference object")
 
 
 if "stage" not in st.session_state:
@@ -148,8 +151,8 @@ if st.session_state.stage ==3:
         st.session_state['refsum'] += st.session_state['refinpixel'][i]
 
     # calculation
-    refcm = float(st.session_state['refincm'])
-    pixel_per_cm = refcm/st.session_state['refsum']
+    
+    pixel_per_cm = st.session_state['refincm']/st.session_state['refsum']
     heightestimated = st.session_state['heightsum']*pixel_per_cm
 
     img = st.session_state['img']
