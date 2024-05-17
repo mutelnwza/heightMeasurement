@@ -48,7 +48,7 @@ def undo():
         st.session_state["pos"].pop()
     elif st.session_state.stage == 2 and len(st.session_state["refpos"]) > 0:
         st.session_state["refpos"].pop()
-    st.experimental_rerun()
+    st.rerun()
 
 if "stage" not in st.session_state:
     st.session_state.stage = 0
@@ -120,7 +120,7 @@ if st.session_state.stage == 0:
                 point = value["x"], value["y"]
                 if list(point) not in st.session_state["pos"] and list(point) not in st.session_state["refpos"]:
                     st.session_state['pos'].append([point[0], point[1]])
-                    st.experimental_rerun()
+                    st.rerun()
 
         st.button("continue", on_click=stage2)
         st.button("reset", on_click=reset) # F5
@@ -148,7 +148,7 @@ if st.session_state.stage == 2:
             point = click["x"], click["y"]
             if list(point) not in st.session_state["refpos"] and list(point) not in st.session_state["pos"]:
                 st.session_state['refpos'].append([point[0], point[1]])
-                st.experimental_rerun()
+                st.rerun()
 
     st.session_state['refincm'] = st.number_input("input height of the reference object (cm)")
     st.button("start calculation", on_click=stage3)
