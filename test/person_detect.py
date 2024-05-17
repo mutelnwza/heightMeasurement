@@ -12,11 +12,22 @@ mp_face_detection = mp.solutions.face_detection
 # Streamlit app function
 def pose_and_face_estimation_app():
     st.title("Pose and Face Detection App")
+
+    if 'image' not in st.session_state:
+    st.session_state.image = None
+    st.session_state.annotated_image = None
     
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
         image = np.array(image)
+
+        st.session_state.image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        st.session_state.annotated_image = st.session_state.image.copy()
+
+    def process_and_annotate_image(image):
+    # (Processing logic here)
+    return annotated_image
 
         # Convert the image from BGR to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -44,8 +55,17 @@ def pose_and_face_estimation_app():
             for detection in face_results.detections:
                 mp_drawing.draw_detection(annotated_image, detection)
 
+#reset button
+    if st.button("Reset Annotations"):
+       if st.session_state.image is not None:
+           st.session_state.annotated_image = process_and_annotate_image(st.session_state.image)
+
+    if st.session_state.image is not None and st.session_state.annotated_image is None:
+    st.session_state.annotated_image = process_and_annotate_image(st.session_state.image)
+
         # Convert the processed image to PIL format to display in Streamlit
-        st.image(annotated_image, caption='Processed Image', use_column_width=True)
+    if st.session_state.annotated_image is not None:
+       st.image(annotated_image, caption='Processed Image', use_column_width=True)
     else:
         st.write("Please upload an image to detect pose and faces.")
 
