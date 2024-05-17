@@ -10,20 +10,17 @@ from streamlit_js_eval import streamlit_js_eval
 def reset():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
-
-def getdist(pos1,pos2):
-    return math.dist(pos1,pos2)
-
+def getdist(pos1, pos2):
+    return math.dist(pos1, pos2)
 
 def stage2():
-    if len(st.session_state['pos']) > 1: 
-        st.session_state.stage =2
+    if len(st.session_state['pos']) > 1:
+        st.session_state.stage = 2
         st.session_state['img'] = imgraw
-        for i in range(len(st.session_state['pos'])-1):
-            st.session_state['heightinpixel'].append(getdist(st.session_state['pos'][i],st.session_state['pos'][i+1]))
+        for i in range(len(st.session_state['pos']) - 1):
+            st.session_state['heightinpixel'].append(getdist(st.session_state['pos'][i], st.session_state['pos'][i + 1]))
     else:
         st.text("please mark the locations")
-
 
     for i in range(len(st.session_state['heightinpixel'])):
         st.session_state['heightsum'] += st.session_state['heightinpixel'][i]
@@ -31,22 +28,22 @@ def stage2():
 def stage3():
     if st.session_state['refincm'] != 0 and st.session_state['refpos'] != []:
         st.session_state['refincm'] = float(st.session_state['refincm'])
-        st.session_state.stage =3
+        st.session_state.stage = 3
         st.session_state['img'] = img
     elif st.session_state['refincm'] == 0:
         st.text("please input height of the reference object")
     elif st.session_state['refpos'] == []:
         st.text("please mark the positions of the reference object")
 
-def undo(session):
-    index = len(session)
-    if index > 0:
-        del session[index-1]
-        st.experimental_rerun()
-
+def undo():
+    if st.session_state.stage == 0 and len(st.session_state["pos"]) > 0:
+        st.session_state["pos"].pop()
+    elif st.session_state.stage == 2 and len(st.session_state["refpos"]) > 0:
+        st.session_state["refpos"].pop()
+    st.rerun()
 
 if "stage" not in st.session_state:
-    st.session_state.stage=0
+    st.session_state.stage = 0
 
 if 'pos' not in st.session_state:
     st.session_state['pos'] = []
@@ -69,10 +66,20 @@ if 'heightinpixel' not in st.session_state:
 if 'heightsum' not in st.session_state:
     st.session_state['heightsum'] = 0
 
+# Add JavaScript to listen for Ctrl + Z and call the undo function
+undo_js = """
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === 'z') {
+        window.streamlitApi.runMethod('undo')
+    }
+});
+"""
+streamlit_js_eval(js_expressions=undo_js)
 
 st.title("Height Estimating")
 
 if st.session_state.stage==0:
+
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         imgraw = Image.open(uploaded_file)
@@ -85,80 +92,78 @@ if st.session_state.stage==0:
             draw = ImageDraw.Draw(imgraw)
 
             if st.button("undo"):
-                undo(st.session_state["pos"])
+                undo()
 
-            positionmarked= len(st.session_state["pos"])
+            positionmarked = len(st.session_state["pos"])
 
             # count position marked then draw circle
             for i in range(positionmarked):
-                circle=[st.session_state["pos"][i][0]-3,st.session_state["pos"][i][1]-3,st.session_state["pos"][i][0]+3,st.session_state["pos"][i][1]+3]
-                draw.ellipse(circle,fill="red")
-            
+                circle = [st.session_state["pos"][i][0] - 3, st.session_state["pos"][i][1] - 3, st.session_state["pos"][i][0] + 3, st.session_state["pos"][i][1] + 3]
+                draw.ellipse(circle, fill="red")
+
             # draw line
             if positionmarked > 1:
-                for i in range(positionmarked-1):
-                    draw.line([st.session_state['pos'][i][0],st.session_state['pos'][i][1],st.session_state['pos'][i+1][0],st.session_state['pos'][i+1][1]],fill="red",width=0)
+                for i in range(positionmarked - 1):
+                    draw.line([st.session_state['pos'][i][0], st.session_state['pos'][i][1], st.session_state['pos'][i + 1][0], st.session_state['pos'][i + 1][1]], fill="red", width=0)
 
-            value=streamlit_image_coordinates(imgraw, key="pil")
+            value = streamlit_image_coordinates(imgraw, key="pil")
 
-            if value is not None and st.session_state.stage==0:
-                point = value["x"],value["y"]
+            if value is not None and st.session_state.stage == 0:
+                point = value["x"], value["y"]
                 if list(point) not in st.session_state["pos"] and list(point) not in st.session_state["refpos"]:
                     st.session_state['pos'].append([point[0],point[1]])
                     st.experimental_rerun()
+            
+            
 
-        st.button("continue",on_click=stage2)
+            # if position clicked is not on the list, append it then reload the website to show the lastest update
+        
+        
+
+        st.button("continue", on_click=stage2)
         st.button("reset", on_click=reset) # F5
 
-
-if st.session_state.stage ==2:
-
-    # st.text(st.session_state['heightsum'])
-    
+if st.session_state.stage == 2:
     img = st.session_state['img']
-    # st.text(st.session_state['heightinpixel'])
     with img:
         st.text("please mark the location of reference object")
         draw = ImageDraw.Draw(img)
-        positionmarked= len(st.session_state["refpos"])
+        positionmarked = len(st.session_state["refpos"])
 
         # count position marked then draw circle
         for i in range(positionmarked):
-            circle=[st.session_state["refpos"][i][0]-3,st.session_state["refpos"][i][1]-3,st.session_state["refpos"][i][0]+3,st.session_state["refpos"][i][1]+3]
-            draw.ellipse(circle,fill=(0,0,255))
+            circle = [st.session_state["refpos"][i][0] - 3, st.session_state["refpos"][i][1] - 3, st.session_state["refpos"][i][0] + 3, st.session_state["refpos"][i][1] + 3]
+            draw.ellipse(circle, fill=(0, 0, 255))
 
         # draw line
         if positionmarked > 1:
-            for i in range(positionmarked-1):
-                draw.line([st.session_state['refpos'][i][0],st.session_state['refpos'][i][1],st.session_state['refpos'][i+1][0],st.session_state['refpos'][i+1][1]],fill=(0,0,255),width=0)
+            for i in range(positionmarked - 1):
+                draw.line([st.session_state['refpos'][i][0], st.session_state['refpos'][i][1], st.session_state['refpos'][i + 1][0], st.session_state['refpos'][i + 1][1]], fill=(0, 0, 255), width=0)
 
-        click=streamlit_image_coordinates(img, key="x")
+        click = streamlit_image_coordinates(img, key="x")
 
         if click is not None:
-            point = click["x"],click["y"]
+            point = click["x"], click["y"]
             if list(point) not in st.session_state["refpos"] and list(point) not in st.session_state["pos"]:
-                st.session_state['refpos'].append([point[0],point[1]])
-                st.experimental_rerun()
-    
+                st.session_state['refpos'].append([point[0], point[1]])
+                st.rerun()
+
     st.session_state['refincm'] = st.number_input("input height of the reference object (cm)")
     st.button("start calculation", on_click=stage3)
 
-
-if st.session_state.stage ==3:
-    for i in range(len(st.session_state['refpos'])-1):
-        st.session_state['refinpixel'].append(getdist(st.session_state['refpos'][i],st.session_state['refpos'][i+1]))
+if st.session_state.stage == 3:
+    for i in range(len(st.session_state['refpos']) - 1):
+        st.session_state['refinpixel'].append(getdist(st.session_state['refpos'][i], st.session_state['refpos'][i + 1]))
 
     for i in range(len(st.session_state['refinpixel'])):
         st.session_state['refsum'] += st.session_state['refinpixel'][i]
 
     # calculation
-    
-    pixel_per_cm = st.session_state['refincm']/st.session_state['refsum']
-    heightestimated = st.session_state['heightsum']*pixel_per_cm
+    pixel_per_cm = st.session_state['refincm'] / st.session_state['refsum']
+    heightestimated = st.session_state['heightsum'] * pixel_per_cm
 
     img = st.session_state['img']
 
     st.image(img)
-    st.text('the estimated height is '+str(int(heightestimated))+'cm')
+    st.text('the estimated height is ' + str(int(heightestimated)) + 'cm')
     st.button("back to upload", on_click=reset)
-
