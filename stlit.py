@@ -35,8 +35,11 @@ def stage2():
         st.session_state['heightsum'] += st.session_state['heightinpixel'][i]
 
 def stage3():
-    st.session_state.stage =3
-    st.session_state['img'] = img
+    if st.session_state['refincm'] != 0:
+        st.session_state.stage =3
+        st.session_state['img'] = img
+    else:
+        
 
 if "stage" not in st.session_state:
     st.session_state.stage=0
@@ -152,4 +155,5 @@ if st.session_state.stage ==3:
 
     st.image(img)
     st.text(heightestimated)
+    st.button("back to upload", on_click=reset)
 
