@@ -7,6 +7,15 @@ import numpy as np
 from streamlit_image_coordinates import streamlit_image_coordinates
 from streamlit_js_eval import streamlit_js_eval
 
+def resize(img_original, img_input):
+    if img_original == "1:1":
+        return img_input.resize((800,800))
+    if img_original == "3:4":
+        return img_input.resize((600,800))
+    if img_original == "9:16":
+        return img_input.resize((360,640))
+
+
 def reset():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
@@ -57,10 +66,11 @@ if 'heightsum' not in st.session_state:
 st.title("Height Estimating")
 
 if st.session_state.stage==0:
+    imgsize = st.radio("Choose the image retio",["1:1","3:4","9:16"])
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         imgraw = Image.open(uploaded_file)
-        imgraw = imgraw.resize((800,800))
+        imgraw = resize(imgsize, imgraw)
 
         st.session_state['img'] = np.array(imgraw)
 
@@ -133,6 +143,7 @@ if st.session_state.stage ==3:
     for i in range(len(st.session_state['refinpixel'])):
         st.session_state['refsum'] += st.session_state['refinpixel'][i]
 
+    # calculation
     refcm = float(st.session_state['refincm'])
     pixel_per_cm = refcm/st.session_state['refsum']
     heightestimated = st.session_state['heightsum']*pixel_per_cm
@@ -141,3 +152,4 @@ if st.session_state.stage ==3:
 
     st.image(img)
     st.text(heightestimated)
+
