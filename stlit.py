@@ -25,10 +25,13 @@ def getdist(pos1,pos2):
 
 
 def stage2():
-    st.session_state.stage =2
-    st.session_state['img'] = imgraw
-    for i in range(len(st.session_state['pos'])-1):
-        st.session_state['heightinpixel'].append(getdist(st.session_state['pos'][i],st.session_state['pos'][i+1]))
+    if len(st.session_state['pos']) > 1: 
+        st.session_state.stage =2
+        st.session_state['img'] = imgraw
+        for i in range(len(st.session_state['pos'])-1):
+            st.session_state['heightinpixel'].append(getdist(st.session_state['pos'][i],st.session_state['pos'][i+1]))
+    else:
+        st.text("please mark the locations")
 
 
     for i in range(len(st.session_state['heightinpixel'])):
@@ -43,6 +46,12 @@ def stage3():
         st.text("please input height of the reference object")
     elif st.session_state['refpos'] == []:
         st.text("please mark the positions of the reference object")
+
+def undo(session):
+    index = len(session)
+    if index > 0:
+        del session[index-1]
+        st.experimental_rerun()
 
 
 if "stage" not in st.session_state:
@@ -85,6 +94,9 @@ if st.session_state.stage==0:
             st.text("click to mark positions of your bodyparts, position recommended:\n-top of your head\n-neck\n-hip(only one side)\n-knee (only one side)\n-ankle(only one side)\n-heel(only one side)")
             draw = ImageDraw.Draw(imgraw)
 
+            if st.button("undo"):
+                undo(st.session_state["pos"])
+
             positionmarked= len(st.session_state["pos"])
 
             # count position marked then draw circle
@@ -104,20 +116,25 @@ if st.session_state.stage==0:
                 if list(point) not in st.session_state["pos"] and list(point) not in st.session_state["refpos"]:
                     st.session_state['pos'].append([point[0],point[1]])
                     st.experimental_rerun()
+            
+            
 
             # if position clicked is not on the list, append it then reload the website to show the lastest update
         
+        
+
         st.button("continue",on_click=stage2)
         st.button("reset", on_click=reset) # F5
 
 
 if st.session_state.stage ==2:
 
-    st.text(st.session_state['heightsum'])
+    # st.text(st.session_state['heightsum'])
     
     img = st.session_state['img']
-    st.text(st.session_state['heightinpixel'])
+    # st.text(st.session_state['heightinpixel'])
     with img:
+        st.text("please mark the location of reference object")
         draw = ImageDraw.Draw(img)
         positionmarked= len(st.session_state["refpos"])
 
@@ -158,6 +175,6 @@ if st.session_state.stage ==3:
     img = st.session_state['img']
 
     st.image(img)
-    st.text(heightestimated)
+    st.text('the estimated height is '+str(int(heightestimated))+'cm')
     st.button("back to upload", on_click=reset)
 
