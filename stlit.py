@@ -1,4 +1,4 @@
-import cv2 
+import cv2
 import math
 import streamlit as st
 from PIL import Image
@@ -6,15 +6,6 @@ from PIL import ImageDraw
 import numpy as np
 from streamlit_image_coordinates import streamlit_image_coordinates
 from streamlit_js_eval import streamlit_js_eval
-
-def resize(img_original, img_input):
-    if img_original == "1:1":
-        return img_input.resize((800,800))
-    if img_original == "3:4":
-        return img_input.resize((600,800))
-    if img_original == "9:16":
-        return img_input.resize((360,640))
-
 
 def reset():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
@@ -82,11 +73,10 @@ if 'heightsum' not in st.session_state:
 st.title("Height Estimating")
 
 if st.session_state.stage==0:
-    imgsize = st.radio("Choose the image retio",["1:1","3:4","9:16"])
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         imgraw = Image.open(uploaded_file)
-        imgraw = resize(imgsize, imgraw)
+        imgraw = imgraw.resize((800,800))
 
         st.session_state['img'] = np.array(imgraw)
 
@@ -116,12 +106,6 @@ if st.session_state.stage==0:
                 if list(point) not in st.session_state["pos"] and list(point) not in st.session_state["refpos"]:
                     st.session_state['pos'].append([point[0],point[1]])
                     st.experimental_rerun()
-            
-            
-
-            # if position clicked is not on the list, append it then reload the website to show the lastest update
-        
-        
 
         st.button("continue",on_click=stage2)
         st.button("reset", on_click=reset) # F5
