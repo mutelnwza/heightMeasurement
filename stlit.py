@@ -39,7 +39,8 @@ def stage3():
         st.session_state.stage =3
         st.session_state['img'] = img
     else:
-        
+        pass
+
 
 if "stage" not in st.session_state:
     st.session_state.stage=0
