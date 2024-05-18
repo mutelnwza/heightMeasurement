@@ -97,6 +97,7 @@ if st.session_state.stage==0:
             camera_image = st.camera_input("Take a picture")
             if camera_image is not None:
                 imgraw = Image.open(camera_image)
+                imgraw = imgraw.resize((600, 600))
                 st.session_state['img'] = np.array(imgraw)
             else:
                 st.warning("Please capture an image using the webcam.")
