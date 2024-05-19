@@ -4,7 +4,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # Load pre-trained DeepLabV3 model
-model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', pretrained=True)
+model = torch.hub.load('pytorch/vision:v0.13.0', 'deeplabv3_resnet50', weights='DeepLabV3_ResNet50_Weights.DEFAULT')
 model.eval()
 
 # Preprocess the image
@@ -25,6 +25,11 @@ input_batch = preprocess(image_path)
 with torch.no_grad():
     output = model(input_batch)['out'][0]
 output_predictions = output.argmax(0)
+
+# Find the highest position of height (y) in the segmentation
+y, x = torch.where(output_predictions == output_predictions.max())
+highest_y_position = y.max().item()
+print(f"The highest position of y in the segmentation is: {highest_y_position}")
 
 # Visualize the results
 plt.imshow(output_predictions.cpu().numpy())
