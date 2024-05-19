@@ -20,7 +20,7 @@ def preprocess(image_path):
     return input_batch
 
 # Predict
-image_path = 'test_img/half.jpg'
+image_path = 'test\\test_img\\half.jpg'
 input_batch = preprocess(image_path)
 with torch.no_grad():
     output = model(input_batch)['out'][0]
