@@ -1,48 +1,49 @@
 import cv2
 import math
 import streamlit as st
-from PIL import Image
-from PIL import ImageDraw
+from PIL import Image, ImageDraw
 import numpy as np
 from streamlit_image_coordinates import streamlit_image_coordinates
 from streamlit_js_eval import streamlit_js_eval
 
 
-def marker(point,tomark,another):
+def marker(point, tomark, another):
     if list(point) not in st.session_state[tomark] and list(point) not in st.session_state[another]:
-        st.session_state[tomark].append([point[0],point[1]])
+        st.session_state[tomark].append([point[0], point[1]])
         st.experimental_rerun()
+
 
 def getdist(pos1, pos2):
     return math.dist(pos1, pos2)
+
 
 def stage3():
     if len(st.session_state['pos']) > 1:
         for i in range(len(st.session_state['pos']) - 1):
             st.session_state['heightinpixel'].append(getdist(st.session_state['pos'][i], st.session_state['pos'][i + 1]))
-    
+
     for i in range(len(st.session_state['heightinpixel'])):
         st.session_state['heightsum'] += st.session_state['heightinpixel'][i]
 
-        if st.session_state['refincm'] != 0 and st.session_state['refpos'] != []:
-            st.session_state['refincm'] = float(st.session_state['refincm'])
-            st.session_state.stage = 3
-            st.session_state['img'] = imgraw
+    if st.session_state['refincm'] != 0 and st.session_state['refpos'] != []:
+        st.session_state['refincm'] = float(st.session_state['refincm'])
+        st.session_state.stage = 3
+        st.session_state['img'] = imgraw
+    elif st.session_state['refpos'] == []:
+        st.text("please mark the locations")
+    elif st.session_state['refincm'] == 0:
+        st.text("please input height of the reference object")
+    elif st.session_state['refpos'] == []:
+        st.text("please mark the positions of the reference object")
 
-
-        elif st.session_state['refpos'] == []:
-            st.text("please mark the locations")
-        elif st.session_state['refincm'] == 0:
-            st.text("please input height of the reference object")
-        elif st.session_state['refpos'] == []:
-            st.text("please mark the positions of the reference object")
 
 def undo():
-    if len(st.session_state["pos"]) > 0 and st.session_state['currentmark']=='person':
+    if len(st.session_state["pos"]) > 0 and st.session_state['currentmark'] == 'person':
         st.session_state["pos"].pop()
-    elif len(st.session_state["refpos"]) > 0 and st.session_state['currentmark']=='object':
+    elif len(st.session_state["refpos"]) > 0 and st.session_state['currentmark'] == 'object':
         st.session_state["refpos"].pop()
     st.rerun()
+
 
 if "stage" not in st.session_state:
     st.session_state.stage = 0
@@ -83,9 +84,9 @@ streamlit_js_eval(js_expressions=undo_js)
 
 st.title("Height Estimating")
 
-if st.session_state.stage==0:
+if st.session_state.stage == 0:
     option = st.selectbox("Choose image source", ("Upload an image", "Capture from webcam"))
-    
+
     if option == "Upload an image":
         uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
         if uploaded_file is not None:
@@ -93,25 +94,29 @@ if st.session_state.stage==0:
             imgraw = imgraw.resize((600, 600))
             st.session_state['img'] = np.array(imgraw)
     elif option == "Capture from webcam":
-        try:
-            camera_image = st.camera_input("Take a picture")
-            if camera_image is not None:
-                imgraw = Image.open(camera_image)
-                st.session_state['img'] = np.array(imgraw)
+        webcam_index = st.selectbox("Select webcam", options=[0, 1, 2], index=0)  # Add more indices if more webcams are available
+        if st.button("Capture Image"):
+            cap = cv2.VideoCapture(webcam_index)
+            if not cap.isOpened():
+                st.error(f"Error accessing the camera {webcam_index}")
             else:
-                st.warning("Please capture an image using the webcam.")
-        except Exception as e:
-            st.error(f"Error accessing the camera: {e}")
+                ret, frame = cap.read()
+                if ret:
+                    imgraw = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                   
+                    st.session_state['img'] = np.array(imgraw)
+                else:
+                    st.error("Failed to capture image")
+                cap.release()
 
     if st.session_state['img'] is not None:
         imgraw = Image.fromarray(st.session_state['img'])
 
         st.session_state['img'] = np.array(imgraw)
-        col1,col2,col3,col4 = st.columns(4)
-
+        col1, col2, col3, col4 = st.columns(4)
 
         with imgraw:
-            st.text("click to mark positions of your bodyparts")
+            st.text("click to mark positions of your body parts")
             draw = ImageDraw.Draw(imgraw)
 
             with col1:
@@ -119,15 +124,15 @@ if st.session_state.stage==0:
                     undo()
             with col2:
                 if st.button("person"):
-                    st.session_state["currentmark"]='person'
+                    st.session_state["currentmark"] = 'person'
             with col3:
                 if st.button("object"):
-                    st.session_state['currentmark']='object'
+                    st.session_state['currentmark'] = 'object'
             with col4:
                 if st.button('reset'):
-                    streamlit_js_eval(js_expressions="parent.window.location.reload()") # F5
+                    streamlit_js_eval(js_expressions="parent.window.location.reload()")  # F5
 
-            st.text("currently working on: "+st.session_state['currentmark'])
+            st.text("currently working on: " + st.session_state['currentmark'])
 
             redpositionmarked = len(st.session_state["pos"])
             bluepositionmarked = len(st.session_state['refpos'])
@@ -138,17 +143,17 @@ if st.session_state.stage==0:
                 draw.ellipse(circle, fill="red")
 
             for i in range(bluepositionmarked):
-                circle = [st.session_state["refpos"][i][0] - 3, st.session_state["refpos"][i][1] - 3, st.session_state["refpos"][i][0] + 3, st.session_state["refpos"][i][1] + 3]
-                draw.ellipse(circle, fill=(0,0,255))
+                circle = [st.session_state['refpos'][i][0] - 3, st.session_state['refpos'][i][1] - 3, st.session_state['refpos'][i][0] + 3, st.session_state['refpos'][i][1] + 3]
+                draw.ellipse(circle, fill=(0, 0, 255))
 
             # draw line
             if redpositionmarked > 1:
                 for i in range(redpositionmarked - 1):
                     draw.line([st.session_state['pos'][i][0], st.session_state['pos'][i][1], st.session_state['pos'][i + 1][0], st.session_state['pos'][i + 1][1]], fill="red", width=0)
 
-            if bluepositionmarked >1:
-                for i in range(bluepositionmarked-1):
-                    draw.line([st.session_state['refpos'][i][0], st.session_state['refpos'][i][1], st.session_state['refpos'][i + 1][0], st.session_state['refpos'][i + 1][1]], fill=(0,0,255), width=0)
+            if bluepositionmarked > 1:
+                for i in range(bluepositionmarked - 1):
+                    draw.line([st.session_state['refpos'][i][0], st.session_state['refpos'][i][1], st.session_state['refpos'][i + 1][0], st.session_state['refpos'][i + 1][1]], fill=(0, 0, 255), width=0)
 
             value = streamlit_image_coordinates(imgraw, key="pil")
 
@@ -159,7 +164,7 @@ if st.session_state.stage==0:
                     marker(point, 'pos', 'refpos')
 
                 elif st.session_state['currentmark'] == 'object':
-                    marker(point, 'refpos', 'pos')        
+                    marker(point, 'refpos', 'pos')
 
         st.session_state['refincm'] = st.number_input("input height of the reference object (cm)")
         st.button("continue", on_click=stage3)
