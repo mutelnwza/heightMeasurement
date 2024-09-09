@@ -101,7 +101,7 @@ if st.session_state.stage == 0:
         col1, col2, col3, col4 = st.columns(4)
 
         with imgraw:
-            st.text("click to mark positions of your body parts")
+            st.text("1.click to mark the position of your body (from head to toe, follow your body parts)\n2.change to object mode and mark the height of your reference object\n3.input the height of your object in the field below")
             draw = ImageDraw.Draw(imgraw)
 
             with col1:
