@@ -1,4 +1,4 @@
-import cv2
+
 import math
 import streamlit as st
 from PIL import Image, ImageDraw
@@ -85,7 +85,7 @@ streamlit_js_eval(js_expressions=undo_js)
 st.title("Height Estimating")
 
 if st.session_state.stage == 0:
-    option = st.selectbox("Choose image source", ("Upload an image", "Capture from webcam"))
+    option = st.selectbox("Choose image source", ("Upload an image",))
 
     if option == "Upload an image":
         uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -93,21 +93,6 @@ if st.session_state.stage == 0:
             imgraw = Image.open(uploaded_file)
             imgraw = imgraw.resize((600, 600))
             st.session_state['img'] = np.array(imgraw)
-    elif option == "Capture from webcam":
-        webcam_index = st.selectbox("Select webcam", options=[0, 1, 2], index=0)  # Add more indices if more webcams are available
-        if st.button("Capture Image"):
-            cap = cv2.VideoCapture(webcam_index)
-            if not cap.isOpened():
-                st.error(f"Error accessing the camera {webcam_index}")
-            else:
-                ret, frame = cap.read()
-                if ret:
-                    imgraw = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                   
-                    st.session_state['img'] = np.array(imgraw)
-                else:
-                    st.error("Failed to capture image")
-                cap.release()
 
     if st.session_state['img'] is not None:
         imgraw = Image.fromarray(st.session_state['img'])
